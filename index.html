@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Adriatic IT Pay Explorer — net vs. gross across 8 Balkan markets</title>
+<meta name="description" content="An honest, source-flagged comparison of IT salaries, wage premiums, ICT exports and pay-transparency status across Serbia, Croatia, Slovenia, Bulgaria, BiH, North Macedonia, Montenegro and Albania. Public data, 2024–2026.">
+<meta property="og:title" content="Adriatic IT Pay Explorer">
+<meta property="og:description" content="Same salaries, two rankings: why net vs. gross flips cross-border IT benchmarks in the Balkans.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..900&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F1F4F2;        /* cool statistical-yearbook paper */
+  --sheet:#FAFBFA;
+  --ink:#12202E;          /* Jadran ink */
+  --ink-soft:#45566A;
+  --rule:#C9D2CE;
+  --sea:#0E8A86;          /* NET — what reaches the sea */
+  --sea-soft:#DCEEEC;
+  --gold:#B98A1C;         /* GROSS — the gold on paper */
+  --gold-soft:#F3E9D2;
+  --flag-red:#B7472F;     /* data-gap / caveat */
+  --flag-soft:#F4E0DB;
+  --radius:10px;
+  --mono:'IBM Plex Mono',ui-monospace,monospace;
+  --sans:'Archivo',system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{animation:none!important;transition:none!important}
+}
+body{
+  background:var(--paper);color:var(--ink);
+  font-family:var(--sans);font-size:16px;line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+}
+a{color:var(--sea)}
+a:hover{color:var(--ink)}
+:focus-visible{outline:3px solid var(--sea);outline-offset:2px;border-radius:4px}
+.mono{font-family:var(--mono)}
+
+.wrap{max-width:980px;margin:0 auto;padding:0 20px}
+
+/* ---------- inline SVG flags ---------- */
+.flag{width:26px;height:17px;border-radius:2.5px;vertical-align:-3px;
+  box-shadow:0 0 0 1px rgba(18,32,46,.14);flex:none}
+.flag.fsm{width:19px;height:12px;vertical-align:-1.5px;border-radius:2px}
+
+/* ---------- header ---------- */
+header{padding:56px 0 24px;border-bottom:2px solid var(--ink)}
+.kicker{
+  font-family:var(--mono);font-size:12px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--ink-soft);margin-bottom:14px;
+}
+h1{
+  font-weight:900;font-stretch:112%;line-height:1.02;
+  font-size:clamp(34px,6vw,58px);letter-spacing:-.015em;
+}
+h1 .net{color:var(--sea)} h1 .gross{color:var(--gold)}
+.thesis{
+  margin-top:16px;max-width:62ch;color:var(--ink-soft);
+  font-size:clamp(16px,2.2vw,18px);
+}
+.hero-stats{display:flex;flex-wrap:wrap;gap:10px;margin-top:26px}
+.chip{
+  background:var(--sheet);border:1px solid var(--rule);border-radius:999px;
+  padding:8px 14px;font-size:13.5px;display:flex;gap:8px;align-items:center;
+}
+.chip b{font-family:var(--mono);font-weight:600;font-size:14px}
+
+/* ---------- sheet sections ---------- */
+section.sheet{
+  background:var(--sheet);border:1px solid var(--rule);border-radius:var(--radius);
+  margin:26px 0;padding:26px 24px 22px;
+}
+.tno{
+  font-family:var(--mono);font-size:12px;letter-spacing:.12em;color:var(--ink-soft);
+  text-transform:uppercase;display:flex;align-items:center;gap:10px;margin-bottom:6px;
+}
+.tno::after{content:"";flex:1;height:1px;background:var(--rule)}
+h2{font-weight:800;font-stretch:105%;font-size:clamp(21px,3.4vw,27px);letter-spacing:-.01em;margin-bottom:6px}
+.sub{color:var(--ink-soft);font-size:14.5px;max-width:72ch;margin-bottom:18px}
+.footnote{font-size:12.5px;color:var(--ink-soft);margin-top:14px;border-top:1px dashed var(--rule);padding-top:10px}
+.footnote .flag{margin:0 1px}
+sup{font-family:var(--mono);font-size:.68em;color:var(--sea)}
+
+/* ---------- toggle ---------- */
+.toggle-row{display:flex;flex-wrap:wrap;align-items:center;gap:14px;margin-bottom:18px}
+.mode-toggle{
+  display:inline-flex;border:2px solid var(--ink);border-radius:999px;overflow:hidden;background:var(--sheet);
+}
+.mode-toggle button{
+  font-family:var(--mono);font-size:13px;font-weight:600;letter-spacing:.08em;
+  padding:9px 18px;border:0;background:transparent;color:var(--ink);cursor:pointer;
+}
+.mode-toggle button[aria-pressed="true"].opt-net{background:var(--sea);color:#fff}
+.mode-toggle button[aria-pressed="true"].opt-gross{background:var(--gold);color:#fff}
+.flipnote{
+  font-size:13px;font-family:var(--mono);padding:7px 12px;border-radius:8px;
+  background:var(--sea-soft);border:1px dashed var(--sea);max-width:560px;
+}
+.flipnote.gross{background:var(--gold-soft);border-color:var(--gold)}
+
+/* ---------- ladder chart ---------- */
+.ladder{display:flex;flex-direction:column;gap:22px}
+.cgroup{display:flex;flex-direction:column;gap:8px}
+.cgroup h3{
+  font-size:15px;font-weight:700;display:flex;flex-wrap:wrap;gap:10px;align-items:center;
+}
+.cgroup h3 .basis{
+  font-family:var(--mono);font-weight:500;font-size:11px;letter-spacing:.08em;
+  color:var(--ink-soft);text-transform:uppercase;
+}
+.row{display:grid;grid-template-columns:120px 1fr;gap:12px;align-items:center}
+.rlabel{font-size:13px;color:var(--ink-soft)}
+.bartrack{position:relative;height:30px}
+.bar{
+  height:30px;border-radius:5px;min-width:2px;width:0;
+  display:flex;align-items:center;justify-content:flex-end;
+  transition:width .65s cubic-bezier(.2,.8,.2,1), background-color .4s;
+  position:relative;cursor:default;
+}
+.bar.net{background:var(--sea)} .bar.gross{background:var(--gold)}
+.bar.est.net{background:repeating-linear-gradient(135deg,var(--sea) 0 7px,#3AA6A2 7px 14px)}
+.bar.est.gross{background:repeating-linear-gradient(135deg,var(--gold) 0 7px,#D2A94A 7px 14px)}
+.bar .val{
+  font-family:var(--mono);font-size:13px;font-weight:600;color:#fff;
+  padding-right:9px;white-space:nowrap;
+}
+.bar .val.outside{position:absolute;left:100%;margin-left:8px;color:var(--ink)}
+.legend{display:flex;flex-wrap:wrap;gap:16px;margin-top:16px;font-size:12.5px;color:var(--ink-soft)}
+.legend span{display:flex;align-items:center;gap:7px}
+.sw{width:22px;height:13px;border-radius:3px;display:inline-block}
+.sw.solid{background:var(--ink)}
+.sw.hatch{background:repeating-linear-gradient(135deg,var(--ink) 0 6px,#6B7A8C 6px 12px)}
+@media(max-width:560px){
+  .row{grid-template-columns:92px 1fr}
+  .bar .val{font-size:11.5px}
+}
+
+/* ---------- calculator ---------- */
+.calc{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-bottom:16px}
+.calc label{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft);display:block;margin-bottom:4px}
+.calc input[type=number],.calc select{
+  font-family:var(--mono);font-size:15px;padding:9px 12px;border:2px solid var(--ink);
+  border-radius:8px;background:var(--sheet);color:var(--ink);min-width:120px;
+}
+.calc input[type=number]{width:132px}
+.calc-head{font-size:16.5px;font-weight:700;margin:4px 0 14px;min-height:1.4em}
+.calc-head b{font-family:var(--mono)}
+table.tt{width:100%;border-collapse:collapse;font-size:14px}
+table.tt th{
+  text-align:left;font-family:var(--mono);font-size:11px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--ink-soft);padding:8px 10px 8px 0;border-bottom:2px solid var(--ink);
+}
+table.tt td{padding:11px 10px 11px 0;border-bottom:1px solid var(--rule);vertical-align:middle}
+table.tt td.num{font-family:var(--mono);font-weight:600;white-space:nowrap}
+tr.srcrow td{background:var(--sea-soft)}
+tr.srcrow td:first-child{border-radius:6px 0 0 6px}
+tr.srcrow td:last-child{border-radius:0 6px 6px 0}
+.d{font-family:var(--mono);font-size:11px;border-radius:5px;padding:2px 6px;margin-left:8px;font-weight:600}
+.d.up{background:var(--gold-soft);color:#8A6712}
+.d.down{background:var(--sea-soft);color:var(--sea)}
+.d.zero{background:#E4E9E7;color:var(--ink-soft)}
+.esttag{font-family:var(--mono);font-size:10px;color:var(--flag-red);margin-left:5px;letter-spacing:.05em}
+
+/* ---------- premium table ---------- */
+.prem{display:flex;flex-direction:column;gap:14px}
+.prow{
+  display:grid;grid-template-columns:160px 1fr 86px;gap:14px;align-items:center;
+  padding:12px 0;border-bottom:1px solid var(--rule);
+}
+.prow:last-child{border-bottom:0}
+.pcountry{font-weight:700;font-size:15px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.pcountry small{display:block;font-weight:400;font-size:11px;color:var(--ink-soft);font-family:var(--mono);width:100%}
+.pbars{display:flex;flex-direction:column;gap:5px}
+.pbar{height:14px;border-radius:3px;position:relative;width:0;min-width:2px;transition:width .7s cubic-bezier(.2,.8,.2,1)}
+.pbar.nat{background:#9FB0AC}
+.pbar.it{background:var(--sea)}
+.pbar span{
+  position:absolute;left:calc(100% + 8px);top:50%;transform:translateY(-50%);
+  font-family:var(--mono);font-size:11.5px;color:var(--ink-soft);white-space:nowrap;
+}
+.pmult{font-family:var(--mono);font-weight:600;font-size:22px;text-align:right;color:var(--ink)}
+.pmult small{display:block;font-size:10.5px;font-weight:500;color:var(--ink-soft);letter-spacing:.06em}
+.prow.gap .pcountry{color:var(--ink-soft)}
+.gaptag{
+  display:inline-block;font-family:var(--mono);font-size:11.5px;
+  background:var(--flag-soft);color:var(--flag-red);border:1px dashed var(--flag-red);
+  border-radius:6px;padding:5px 10px;
+}
+@media(max-width:560px){
+  .prow{grid-template-columns:112px 1fr 62px}
+  .pmult{font-size:17px}
+  .pbar span{font-size:10px}
+}
+
+/* ---------- macro ---------- */
+.macro-grid{display:grid;grid-template-columns:1fr;gap:8px}
+.mrow{display:grid;grid-template-columns:160px 1fr;gap:14px;align-items:center;padding:7px 0}
+.mlabel{font-size:14px;font-weight:600;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.mlabel small{display:block;font-family:var(--mono);font-size:10.5px;color:var(--ink-soft);font-weight:400;width:100%}
+.mbar{height:22px;background:var(--ink);border-radius:4px;position:relative;min-width:2px;width:0;transition:width .7s cubic-bezier(.2,.8,.2,1)}
+.mbar span{
+  position:absolute;left:calc(100% + 8px);top:50%;transform:translateY(-50%);
+  font-family:var(--mono);font-size:12.5px;white-space:nowrap;
+}
+.emp{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px}
+.emp .chip b{color:var(--sea)}
+@media(max-width:560px){.mrow{grid-template-columns:104px 1fr}}
+
+/* ---------- transparency ---------- */
+.status{
+  font-family:var(--mono);font-size:11.5px;font-weight:600;border-radius:6px;
+  padding:4px 9px;white-space:nowrap;display:inline-block;
+}
+.status.red{background:var(--flag-soft);color:var(--flag-red)}
+.status.amber{background:var(--gold-soft);color:#8A6712}
+.status.grey{background:#E4E9E7;color:var(--ink-soft)}
+td .cname{font-weight:700;white-space:nowrap;display:flex;gap:8px;align-items:center}
+td .cname small{font-family:var(--mono);font-weight:500;color:var(--ink-soft)}
+
+/* ---------- methodology ---------- */
+details{border:1px solid var(--rule);border-radius:8px;background:var(--paper);margin-bottom:10px}
+details summary{
+  cursor:pointer;padding:13px 16px;font-weight:700;font-size:14.5px;list-style:none;
+  display:flex;justify-content:space-between;align-items:center;
+}
+details summary::-webkit-details-marker{display:none}
+details summary::after{content:"+";font-family:var(--mono);font-size:18px;color:var(--sea)}
+details[open] summary::after{content:"–"}
+details .dbody{padding:0 16px 16px;font-size:13.5px;color:var(--ink-soft)}
+details .dbody li{margin:6px 0 6px 18px}
+code{font-family:var(--mono);font-size:.9em;background:#E4E9E7;padding:1px 5px;border-radius:4px}
+
+/* ---------- tooltip ---------- */
+#tip{
+  position:fixed;z-index:60;pointer-events:none;opacity:0;transition:opacity .15s;
+  background:var(--ink);color:#F1F4F2;font-family:var(--mono);font-size:12px;line-height:1.45;
+  padding:8px 11px;border-radius:7px;max-width:270px;box-shadow:0 6px 18px rgba(18,32,46,.28);
+}
+
+/* ---------- footer ---------- */
+footer{padding:34px 0 60px;color:var(--ink-soft);font-size:13.5px}
+footer .sig{font-family:var(--mono);font-size:12.5px;margin-top:10px}
+.hairline{height:2px;background:var(--ink);margin:8px 0 22px}
+</style>
+</head>
+<body>
+
+<!-- ============ inline SVG flag sprite (Windows-safe, zero deps) ============ -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+<defs>
+<clipPath id="c-r"><rect width="30" height="20" rx="1.5"/></clipPath>
+<clipPath id="c-hr"><path d="M11.2 5.6 h7.6 v5.4 q0 3.2 -3.8 4.3 q-3.8 -1.1 -3.8 -4.3 z"/></clipPath>
+
+<symbol id="f-rs" viewBox="0 0 30 20"><g clip-path="url(#c-r)">
+<rect width="30" height="20" fill="#fff"/><rect width="30" height="6.7" fill="#C6363C"/><rect y="6.7" width="30" height="6.6" fill="#0C4076"/>
+<path d="M8.2 5.9 h5.2 v4.4 q0 2.6 -2.6 3.6 q-2.6 -1 -2.6 -3.6 z" fill="#C6363C" stroke="#fff" stroke-width=".55"/>
+<rect x="10.4" y="6.7" width=".9" height="5.6" fill="#fff"/><rect x="8.9" y="8.3" width="3.9" height=".9" fill="#fff"/>
+</g></symbol>
+
+<symbol id="f-hr" viewBox="0 0 30 20"><g clip-path="url(#c-r)">
+<rect width="30" height="20" fill="#fff"/><rect width="30" height="6.7" fill="#C8102E"/><rect y="13.3" width="30" height="6.7" fill="#171796"/>
+<g clip-path="url(#c-hr)"><rect x="11.2" y="5.6" width="7.6" height="10" fill="#fff"/>
+<rect x="11.2" y="5.6" width="1.9" height="1.9" fill="#C8102E"/><rect x="15" y="5.6" width="1.9" height="1.9" fill="#C8102E"/>
+<rect x="13.1" y="7.5" width="1.9" height="1.9" fill="#C8102E"/><rect x="16.9" y="7.5" width="1.9" height="1.9" fill="#C8102E"/>
+<rect x="11.2" y="9.4" width="1.9" height="1.9" fill="#C8102E"/><rect x="15" y="9.4" width="1.9" height="1.9" fill="#C8102E"/>
+<rect x="13.1" y="11.3" width="1.9" height="1.9" fill="#C8102E"/><rect x="16.9" y="11.3" width="1.9" height="1.9" fill="#C8102E"/>
+<rect x="15" y="13.2" width="1.9" height="1.9" fill="#C8102E"/><rect x="11.2" y="13.2" width="1.9" height="1.9" fill="#C8102E"/></g>
+<path d="M11.2 5.6 h7.6 v5.4 q0 3.2 -3.8 4.3 q-3.8 -1.1 -3.8 -4.3 z" fill="none" stroke="#C8102E" stroke-width=".45"/>
+</g></symbol>
+
+<symbol id="f-si" viewBox="0 0 30 20"><g clip-path="url(#c-r)">
+<rect width="30" height="20" fill="#DE1F26"/><rect width="30" height="13.3" fill="#0052B4"/><rect width="30" height="6.7" fill="#fff"/>
+<path d="M6.6 3.4 h5.4 v3.4 q0 2.4 -2.7 3.3 q-2.7 -.9 -2.7 -3.3 z" fill="#0052B4" stroke="#fff" stroke-width=".5"/>
+<path d="M7.4 8.1 l1.3-2.2 .8 1 .8-1.6 1.1 2.8 z" fill="#fff"/>
+<path d="M7.3 8.9 h4.1 M7.6 9.7 h3.5" stroke="#fff" stroke-width=".45" fill="none"/>
+</g></symbol>
+
+<symbol id="f-bg" viewBox="0 0 30 20"><g clip-path="url(#c-r)">
+<rect width="30" height="20" fill="#D62612"/><rect width="30" height="13.3" fill="#00966E"/><rect width="30" height="6.7" fill="#fff"/>
+</g></symbol>
+
+<symbol id="f-ba" viewBox="0 0 30 20"><g clip-path="url(#c-r)">
+<rect width="30" height="20" fill="#002F6C"/>
+<polygon points="10,0 26,0 26,20" fill="#FECB00"/>
+<circle cx="10" cy="3.2" r="1" fill="#fff"/><circle cx="13.2" cy="7.2" r="1" fill="#fff"/><circle cx="16.4" cy="11.2" r="1" fill="#fff"/><circle cx="19.6" cy="15.2" r="1" fill="#fff"/><circle cx="22.8" cy="19.2" r="1" fill="#fff"/>
+</g></symbol>
+
+<symbol id="f-mk" viewBox="0 0 30 20"><g clip-path="url(#c-r)">
+<rect width="30" height="20" fill="#D20000"/>
+<g fill="#FFE600">
+<polygon points="18.0,9.5 18.0,10.5 30.9,11.6 30.9,8.4"/>
+<polygon points="17.5,11.7 16.8,12.5 25.1,22.1 27.4,19.9"/>
+<polygon points="15.6,13.0 14.4,13.0 13.4,25.6 16.6,25.6"/>
+<polygon points="13.2,12.5 12.5,11.7 2.6,19.9 4.9,22.1"/>
+<polygon points="12.0,10.5 12.0,9.5 -0.9,8.4 -0.9,11.6"/>
+<polygon points="12.5,8.3 13.2,7.5 4.9,-2.1 2.6,0.1"/>
+<polygon points="14.4,7.0 15.6,7.0 16.6,-5.6 13.4,-5.6"/>
+<polygon points="16.8,7.5 17.5,8.3 27.4,0.1 25.1,-2.1"/>
+<circle cx="15" cy="10" r="3.4"/></g>
+<circle cx="15" cy="10" r="3.4" fill="none" stroke="#D20000" stroke-width=".5"/>
+</g></symbol>
+
+<symbol id="f-me" viewBox="0 0 30 20"><g clip-path="url(#c-r)">
+<rect width="30" height="20" fill="#D3AE3B"/><rect x="1.6" y="1.6" width="26.8" height="16.8" fill="#C40308"/>
+<g fill="#D3AE3B">
+<circle cx="13.9" cy="6.9" r=".95"/><circle cx="16.1" cy="6.9" r=".95"/>
+<polygon points="15,7.4 16.2,9.4 15.9,12.6 15,13.6 14.1,12.6 13.8,9.4"/>
+<polygon points="14.0,8.3 10.4,7.2 10.4,8.5 13.9,9.7"/>
+<polygon points="13.9,10.3 11.2,9.9 11.2,11.0 13.9,11.5"/>
+<polygon points="16.0,8.3 19.6,7.2 19.6,8.5 16.1,9.7"/>
+<polygon points="16.1,10.3 18.8,9.9 18.8,11.0 16.1,11.5"/>
+<rect x="14.7" y="4.3" width=".6" height="1.8"/><rect x="14.1" y="4.9" width="1.8" height=".6"/>
+<polygon points="15,13.4 13.4,15.4 15,14.9 16.6,15.4"/>
+</g>
+<ellipse cx="15" cy="11.1" rx="1.05" ry="1.2" fill="#2E7D32"/>
+</g></symbol>
+
+<symbol id="f-al" viewBox="0 0 30 20"><g clip-path="url(#c-r)">
+<rect width="30" height="20" fill="#E41E20"/>
+<g fill="#141414">
+<circle cx="13.3" cy="5.7" r="1.2"/><circle cx="16.7" cy="5.7" r="1.2"/>
+<polygon points="12.2,5.4 11.1,6.1 12.3,6.4"/><polygon points="17.8,5.4 18.9,6.1 17.7,6.4"/>
+<polygon points="15,6.6 16.4,9.4 16.1,14.8 15,16.0 13.9,14.8 13.6,9.4"/>
+<polygon points="13.9,7.4 5.6,4.6 5.6,6.1 13.7,9.0"/>
+<polygon points="13.7,9.6 6.6,8.0 6.6,9.5 13.6,11.0"/>
+<polygon points="13.6,11.6 7.8,11.0 7.8,12.4 13.6,13.0"/>
+<polygon points="16.1,7.4 24.4,4.6 24.4,6.1 16.3,9.0"/>
+<polygon points="16.3,9.6 23.4,8.0 23.4,9.5 16.4,11.0"/>
+<polygon points="16.4,11.6 22.2,11.0 22.2,12.4 16.4,13.0"/>
+<polygon points="15,15.2 13.0,17.6 15,16.9 17.0,17.6"/>
+</g>
+</g></symbol>
+</defs>
+</svg>
+
+<div id="tip" role="tooltip" aria-hidden="true"></div>
+
+<header>
+  <div class="wrap">
+    <div class="kicker">Public-data micro-tool · Serbia · Croatia · Slovenia · Bulgaria · BiH · N. Macedonia · Montenegro · Albania</div>
+    <h1>Same salaries.<br>Two rankings: <span class="net">net</span> vs. <span class="gross">gross</span>.</h1>
+    <p class="thesis">Balkan IT talks in <strong>net</strong>; EU statistics and pay-transparency law talk in <strong>gross</strong>. Benchmark across that line carelessly and country rankings quietly flip. This page compares 8 Adriatic &amp; Balkan IT markets with every figure's basis, source and vintage on the label.</p>
+    <div class="hero-stats">
+      <span class="chip"><svg class="flag fsm"><use href="#f-rs"/></svg> ICT services exports 2025 <b>€4.55bn</b></span>
+      <span class="chip">EU pay-transparency deadline, members compliant <b>0 / 3</b></span>
+      <span class="chip"><svg class="flag fsm"><use href="#f-rs"/></svg> IT-to-average wage multiple <b>≈2.3×</b></span>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+<!-- ======================= T.01 ======================= -->
+<section class="sheet" id="t01">
+  <div class="tno">Tabela 01 · Developer pay ladders</div>
+  <h2>Flip the basis, flip the ranking</h2>
+  <p class="sub">Monthly developer pay in the three markets with published seniority data. Solid bars are <strong>as reported</strong> by the source; hatched bars are <strong>converted estimates</strong> using each country's average-wage net/gross ratio. Hover or tap any bar for the fine print — and watch Slovenia and Croatia trade places.</p>
+
+  <div class="toggle-row">
+    <div class="mode-toggle" role="group" aria-label="Salary basis">
+      <button type="button" class="opt-net" id="btnNet" aria-pressed="true">NET €/mo</button>
+      <button type="button" class="opt-gross" id="btnGross" aria-pressed="false">GROSS €/mo</button>
+    </div>
+    <div class="flipnote" id="flipnote"></div>
+  </div>
+
+  <div class="ladder" id="ladder"></div>
+
+  <div class="legend">
+    <span><i class="sw solid"></i> as reported by source</span>
+    <span><i class="sw hatch"></i> converted estimate (≈)</span>
+  </div>
+  <p class="footnote">Sources: <svg class="flag fsm"><use href="#f-rs"/></svg> FishingBooker IT Salary Survey 2024 (net EUR, ~3,800 respondents; senior shown at the reported €3,500 floor)<sup>1</sup> · <svg class="flag fsm"><use href="#f-hr"/></svg> TABU.hr 2025 (net EUR, 8,000+ salaries, &gt;50% market coverage)<sup>2</sup> · <svg class="flag fsm"><use href="#f-si"/></svg> Slovenian developer survey 2025 by M. Medven (gross EUR, 1,153 respondents; all-level median band €3,500–3,999, midpoint shown — no seniority split published)<sup>3</sup>. Conversion ratios in Methodology.</p>
+</section>
+
+<!-- ======================= T.02 ======================= -->
+<section class="sheet" id="t02">
+  <div class="tno">Tabela 02 · Salary translator</div>
+  <h2>Translate one salary across all eight markets</h2>
+  <p class="sub">Enter any monthly amount in EUR. The translator answers the two questions benchmarking actually needs: what <strong>gross an employer must pay</strong> in each market to deliver the same net — and what <strong>net the same gross</strong> would leave. Ratios are the national average-wage net/gross ratios from the Annex, applied uniformly (a documented simplification: progressive systems tax high salaries harder).</p>
+
+  <div class="calc">
+    <div>
+      <label for="calcAmt">Amount (€/mo)</label>
+      <input type="number" id="calcAmt" value="2500" min="1" max="200000" step="50" inputmode="numeric">
+    </div>
+    <div>
+      <label for="calcCountry">Reported in</label>
+      <select id="calcCountry"></select>
+    </div>
+    <div>
+      <label>Basis as entered</label>
+      <div class="mode-toggle" role="group" aria-label="Basis of entered amount">
+        <button type="button" class="opt-net" id="btnCNet" aria-pressed="true">NET</button>
+        <button type="button" class="opt-gross" id="btnCGross" aria-pressed="false">GROSS</button>
+      </div>
+    </div>
+  </div>
+
+  <p class="calc-head" id="calcHead"></p>
+
+  <div style="overflow-x:auto">
+  <table class="tt">
+    <thead><tr><th>Market</th><th>Gross to match your net</th><th>Net from your gross</th></tr></thead>
+    <tbody id="calcBody"></tbody>
+  </table>
+  </div>
+  <p class="footnote">Employer-cost deltas are relative to the gross in your selected market. Albania's ratio is a rough estimate. Social-contribution caps, allowances and progressive brackets are not modeled — this is a first-pass translator, not a payroll engine.</p>
+</section>
+
+<!-- ======================= T.03 ======================= -->
+<section class="sheet" id="t03">
+  <div class="tno">Tabela 03 · The IT premium</div>
+  <h2>How far above the average wage does IT sit?</h2>
+  <p class="sub">IT / developer pay vs. the national average wage, each computed inside one source's own basis (no cross-basis mixing). In half the region, no clean public multiple can be computed at all — that gap is a finding, not a footnote.</p>
+  <div class="prem" id="prem"></div>
+  <p class="footnote">Computed multiples: <svg class="flag fsm"><use href="#f-rs"/></svg> FishingBooker mid-level midpoint €2,400 net vs. RZS avg net wage ≈€1,037 (Mar 2026)<sup>1,4</sup> · <svg class="flag fsm"><use href="#f-mk"/></svg> Makstat I&amp;C sector MKD 79,458 net (2023) vs. national avg MKD 45,961 net (Nov 2025) — vintages differ, treat as ≈<sup>5</sup> · <svg class="flag fsm"><use href="#f-si"/></svg> SURS Information &amp; Communication €3,436 gross vs. national €2,536 gross (2025)<sup>6</sup> · <svg class="flag fsm"><use href="#f-hr"/></svg> MojaPlaća: IT sector 21% above its national average base (net, Q1 2026)<sup>7</sup>.</p>
+</section>
+
+<!-- ======================= T.04 ======================= -->
+<section class="sheet" id="t04">
+  <div class="tno">Tabela 04 · Sector weight</div>
+  <h2>ICT exports and workforce, side by side</h2>
+  <p class="sub">Export figures come from different bases and years (balance-of-payments vs. industry-revenue surveys) — read them as orders of magnitude, not a league table. Vintage is printed on every bar; hover for the basis note.</p>
+  <div class="macro-grid" id="macro"></div>
+  <div class="emp" id="emp"></div>
+  <p class="footnote"><svg class="flag fsm"><use href="#f-bg"/></svg> Bulgaria is shown on an industry-revenue basis: BASSCOM Barometer 2025 puts software-industry volume at ≈BGN 11bn (≈€5.6bn) with 87% of revenue from exports — not directly comparable to BoP export lines.<sup>8</sup> <svg class="flag fsm"><use href="#f-ba"/></svg> figure covers the Sarajevo ICT cluster only (no unified BiH statistic exists).<sup>9</sup> <svg class="flag fsm"><use href="#f-mk"/></svg> MASIT export figure dates to 2019 — flagged as stale.<sup>10</sup></p>
+</section>
+
+<!-- ======================= T.05 ======================= -->
+<section class="sheet" id="t05">
+  <div class="tno">Tabela 05 · Pay-transparency tracker</div>
+  <h2>Directive 2023/970: deadline was 7 June 2026. Score so far: 0 for 3.</h2>
+  <p class="sub">All three EU members in the region missed the transposition deadline. Candidate countries have no directive-equivalent regime — which is exactly why cross-border employers here will feel the directive first through their EU entities.</p>
+  <div style="overflow-x:auto">
+  <table class="tt">
+    <thead><tr><th>Market</th><th>Status (mid-2026)</th><th>Detail</th></tr></thead>
+    <tbody id="ttbody"></tbody>
+  </table>
+  </div>
+  <p class="footnote">Tracked via national labour-ministry publications and transposition monitors (beqom, Pinsent Masons), snapshot August 2026.<sup>11</sup> Slovenia's ZDR-1 has carried an equal-pay-for-equal-work clause since Dec 2023 — a foundation, not a transposition.</p>
+</section>
+
+<!-- ======================= methodology ======================= -->
+<section class="sheet" id="meth">
+  <div class="tno">Annex · Methodology &amp; sources</div>
+  <h2>Every number, on the record</h2>
+  <p class="sub" style="margin-bottom:16px">Self-reported crowd surveys skew toward engaged, higher-earning, urban respondents. Company-sourced benchmarks are cleaner but narrower. This page never mixes bases inside one comparison without saying so.</p>
+
+  <details>
+    <summary>Net ⇄ gross conversion ratios (and why they're approximations)</summary>
+    <div class="dbody">
+      <p>Ratios are derived from each country's <em>national average wage</em> statistics (or statutory rates where noted) and applied uniformly. Real IT salaries sit above the average, and progressive systems tax them harder — so converted gross figures for high earners are, if anything, <em>understated</em>. That's precisely the argument for demanding basis labels on any benchmark.</p>
+      <ul>
+        <li>Serbia <code>net/gross ≈ 0.727</code> — RZS, Mar 2026 (net RSD 121,650 / gross RSD 167,263)</li>
+        <li>Croatia <code>≈ 0.727</code> — DZS-based averages, 2026 (net ≈€1,527 / gross ≈€2,100)</li>
+        <li>Slovenia <code>≈ 0.632</code> — SURS 2025 (net €1,602.05 / gross €2,536.03)</li>
+        <li>BiH <code>≈ 0.643</code> — 2025 (net BAM 1,633 / gross BAM 2,538)</li>
+        <li>N. Macedonia <code>≈ 0.665</code> — Nov 2025 (net MKD 45,961 / gross MKD 69,141)</li>
+        <li>Montenegro <code>≈ 0.836</code> — Dec 2024 (net €1,012 / gross €1,210)</li>
+        <li>Bulgaria <code>≈ 0.776</code> — statutory estimate: (1 − 13.78% employee SSC) × (1 − 10% flat PIT)</li>
+        <li>Albania <code>≈ 0.84</code> — rough estimate, flagged; progressive PIT + SSC</li>
+      </ul>
+      <p>FX used where sources report local currency: RSD ≈ 117.2/€ · BAM 1.95583/€ (pegged) · BGN 1.95583/€ (pegged) · MKD ≈ 61.5/€.</p>
+    </div>
+  </details>
+
+  <details>
+    <summary>Numbered sources</summary>
+    <div class="dbody">
+      <ul>
+        <li><sup>1</sup> FishingBooker IT Salary Survey (Serbia, annual, net) — <a href="https://inside.fishingbooker.com/anketa-o-platama-2025/" rel="noopener">inside.fishingbooker.com</a></li>
+        <li><sup>2</sup> TABU.hr by Bornfight (Croatia, annual, net) — <a href="https://www.tabu.hr" rel="noopener">tabu.hr</a></li>
+        <li><sup>3</sup> Slovenian developer salary survey 2025, M. Medven / SmartNinja (gross) — <a href="https://smartninja.si/blog/place-slovenskih-programerjev-2025-kaj-razkriva-letosnja-anketa/" rel="noopener">smartninja.si</a></li>
+        <li><sup>4</sup> Statistical Office of the Republic of Serbia (RZS), average wages — <a href="https://www.stat.gov.rs" rel="noopener">stat.gov.rs</a></li>
+        <li><sup>5</sup> State Statistical Office of North Macedonia (Makstat) — <a href="https://www.stat.gov.mk" rel="noopener">stat.gov.mk</a></li>
+        <li><sup>6</sup> Statistical Office of Slovenia (SURS) — <a href="https://www.stat.si" rel="noopener">stat.si</a></li>
+        <li><sup>7</sup> MojaPlaća / Alma Career Croatia (net, 61k+ respondents) — <a href="https://mojposao.hr" rel="noopener">mojposao.hr</a></li>
+        <li><sup>8</sup> BASSCOM Barometer 2025 (17th ed., Bulgaria) — <a href="https://basscom.org" rel="noopener">basscom.org</a> · dev.bg salary survey — <a href="https://dev.bg" rel="noopener">dev.bg</a></li>
+        <li><sup>9</sup> Sarajevo ICT cluster reporting (KiTalent / Bit Alliance ecosystem coverage)</li>
+        <li><sup>10</sup> MASIT ICT chamber, North Macedonia (latest detailed export mapping: 2019)</li>
+        <li><sup>11</sup> EU Directive 2023/970 transposition monitors: beqom country tracker; Pinsent Masons deadline coverage; Bulgarian MoL draft of 19 May 2026</li>
+        <li>Macro context: NBS &amp; The Recursive (Serbia exports €4.552bn, 2025) · Eurostat ICT-specialist series · Emerging Europe country profiles · OECD Western Balkans Convergence Scoreboard 2025</li>
+      </ul>
+    </div>
+  </details>
+
+  <details>
+    <summary>Known limitations</summary>
+    <div class="dbody">
+      <ul>
+        <li>Serbia's FishingBooker sample skews toward product / foreign-client companies → reads high vs. the whole market.</li>
+        <li>Slovenia's survey publishes no seniority split; its all-level median is compared against other countries' senior tiers only where labeled.</li>
+        <li>Bulgaria, BiH, Montenegro and Albania lack a matched IT-vs-national-average pair inside one methodology — shown as explicit data gaps.</li>
+        <li>The salary translator applies average-wage ratios uniformly; contribution caps, allowances and progressive brackets are not modeled.</li>
+        <li>Export bases differ (BoP services vs. industry revenue). Never rank them literally.</li>
+        <li>Flags are simplified inline-SVG marks — deliberately, so they render identically on every OS (emoji flags don't load on Windows).</li>
+        <li>Snapshot: public sources as of August 2026. Corrections and fresher data → open a PR or issue.</li>
+      </ul>
+    </div>
+  </details>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="hairline"></div>
+    <p><strong>Adriatic IT Pay Explorer</strong> — a single-file, dependency-free HTML page. Personal open-data project; not compensation advice, not affiliated with any source cited. MIT licensed — fork it, correct it, extend it.</p>
+    <p class="sig">Built by Vojislav Vujić · HR data &amp; analytics · <a href="https://www.linkedin.com/in/vojislavvujic" rel="noopener">LinkedIn</a> · <a href="https://github.com/vjslvvjc" rel="noopener">GitHub</a></p>
+  </div>
+</footer>
+
+<script>
+/* ============================================================
+   DATA — edit this block to refresh the page.
+   basis: what the source reports. ratio: national net/gross.
+   ============================================================ */
+const FLAG = (id, sm) => `<svg class="flag${sm ? " fsm" : ""}" aria-hidden="true"><use href="#f-${id}"/></svg>`;
+const RM = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+const LADDER = [
+  {
+    id:"rs", flag:"rs", name:"Serbia", basis:"net", ratio:0.727,
+    srcNote:"FishingBooker 2024 · net EUR",
+    rows:[
+      {label:"Mid-level", value:2400, note:"midpoint of €2,000–2,800"},
+      {label:"Senior / lead", value:3500, note:"reported floor €3,500+", plus:true}
+    ]
+  },
+  {
+    id:"hr", flag:"hr", name:"Croatia", basis:"net", ratio:0.727,
+    srcNote:"TABU.hr 2025 · net EUR",
+    rows:[
+      {label:"Junior", value:1342},
+      {label:"Mid-level", value:1894},
+      {label:"Senior", value:2573}
+    ]
+  },
+  {
+    id:"si", flag:"si", name:"Slovenia", basis:"gross", ratio:0.632,
+    srcNote:"Medven survey 2025 · gross EUR",
+    rows:[
+      {label:"All-level median", value:3750, note:"midpoint of €3,500–3,999 band; no seniority split published"}
+    ]
+  }
+];
+
+const RATIOS = [
+  {id:"rs", name:"Serbia",        r:0.727},
+  {id:"hr", name:"Croatia",       r:0.727},
+  {id:"si", name:"Slovenia",      r:0.632},
+  {id:"bg", name:"Bulgaria",      r:0.776},
+  {id:"ba", name:"BiH",           r:0.643},
+  {id:"mk", name:"N. Macedonia",  r:0.665},
+  {id:"me", name:"Montenegro",    r:0.836},
+  {id:"al", name:"Albania",       r:0.84, est:true}
+];
+
+const PREMIUM = [
+  {flag:"rs", name:"Serbia", meta:"net · FishingBooker mid vs. RZS avg", nat:1037, it:2400, mult:"≈2.3×"},
+  {flag:"mk", name:"N. Macedonia", meta:"net · Makstat I&C vs. nat. avg (mixed vintages)", nat:746, it:1292, mult:"≈1.7×"},
+  {flag:"si", name:"Slovenia", meta:"gross · SURS I&C sector vs. nat. avg", nat:2536, it:3436, mult:"1.35×"},
+  {flag:"hr", name:"Croatia", meta:"net · MojaPlaća IT vs. its nat. base", nat:1616, it:1955, mult:"1.21×"},
+  {flag:"bg", name:"Bulgaria", gap:"strong salary survey (dev.bg), no matched national baseline in-methodology"},
+  {flag:"ba", name:"BiH", gap:"entity-split statistics; IT figures anecdotal (Plata.ba, contractor rates)"},
+  {flag:"me", name:"Montenegro", gap:"no crowd-sourced IT survey; Glassdoor n≈20"},
+  {flag:"al", name:"Albania", gap:"no consolidated local survey; foreign aggregators only"}
+];
+
+const EXPORTS = [
+  {flag:"rs", name:"Serbia", detail:"BoP services · 2025", val:4.552, label:"€4.55bn", tip:"Serbia: €4.552bn ICT services exports in 2025 (NBS, balance-of-payments basis). Record year; largest net-exporting industry."},
+  {flag:"bg", name:"Bulgaria", detail:"industry revenue ×87% export share · 2025 est.", val:4.9, label:"≈€4.9bn*", tip:"Bulgaria: derived — BASSCOM industry volume ≈BGN 11bn × 87% export share. Industry-revenue basis, NOT comparable to BoP lines."},
+  {flag:"hr", name:"Croatia", detail:"sector exports · 2024", val:2.0, label:"€2.0bn", tip:"Croatia: €2.0bn sector exports in 2024, +14.5% YoY."},
+  {flag:"si", name:"Slovenia", detail:"BoP-derived · 2024", val:1.1, label:"≈€1.1bn", tip:"Slovenia: ≈€1.1bn ICT services exports (World Bank BoP-derived, approximate)."},
+  {flag:"ba", name:"BiH", detail:"Sarajevo cluster only · 2025", val:0.31, label:"≈€0.31bn", tip:"BiH: ≈€310m from the Sarajevo ICT cluster only — no unified national statistic exists."},
+  {flag:"mk", name:"N. Macedonia", detail:"MASIT · 2019 (stale)", val:0.21, label:"€0.21bn", tip:"North Macedonia: €210m per MASIT — 2019 vintage, flagged as stale."},
+  {flag:"al", name:"Albania", detail:"ICT exports · 2022", val:0.155, label:"€0.16bn", tip:"Albania: €155.3m ICT exports in 2022, up from €68.4m in 2018."}
+];
+
+const EMPLOY = [
+  {flags:["rs"], t:"~115,000+ in ICT"},
+  {flags:["bg"], t:"60,000+ in software"},
+  {flags:["hr"], t:"~41,000 (up to 65k by wider defs)"},
+  {flags:["si"], t:"36,089 (SURS 2023)"},
+  {flags:["ba"], t:"~11,400 Sarajevo Canton"},
+  {flags:["mk","me","al"], t:"no comparable public headcount"}
+];
+
+const TRANSPARENCY = [
+  {flag:"bg", name:"Bulgaria", tag:"EU", s:"amber", st:"Missed · draft out", d:"Draft amendment to the Protection against Discrimination Act published 19 May 2026; consultation closed 18 June 2026."},
+  {flag:"hr", name:"Croatia", tag:"EU", s:"red", st:"Missed · silent", d:"No known transposition activity as of mid-2026; no pre-existing framework to build on."},
+  {flag:"si", name:"Slovenia", tag:"EU", s:"red", st:"Missed · silent", d:"No draft as of Feb 2026. ZDR-1 equal-pay clause (Dec 2023) exists but is not a transposition."},
+  {flag:"rs", name:"Serbia", tag:"candidate", s:"grey", st:"No regime", d:"No directive-equivalent pay-transparency rules."},
+  {flag:"ba", name:"BiH", tag:"candidate", s:"grey", st:"No regime", d:"No directive-equivalent rules; entity-level labour law."},
+  {flag:"mk", name:"N. Macedonia", tag:"candidate", s:"grey", st:"No regime", d:"No directive-equivalent rules."},
+  {flag:"me", name:"Montenegro", tag:"candidate", s:"grey", st:"No regime", d:"No directive-equivalent rules; digital-nomad regime instead competes on zero foreign-income tax."},
+  {flag:"al", name:"Albania", tag:"candidate", s:"grey", st:"No regime", d:"No directive-equivalent rules."}
+];
+
+/* ============================================================
+   HELPERS
+   ============================================================ */
+const fmt = n => "€" + Math.round(n).toLocaleString("en-US");
+function sweep(scope){
+  const go = () => scope.querySelectorAll("[data-w]").forEach(b => { b.style.width = b.dataset.w; });
+  if (RM) { go(); } else { requestAnimationFrame(() => requestAnimationFrame(go)); }
+}
+
+/* ============================================================
+   T.01 LADDER
+   ============================================================ */
+function ladderValues(mode){
+  return LADDER.map(c => ({
+    ...c,
+    rows: c.rows.map(r => {
+      const native = c.basis === mode;
+      const val = native ? r.value : (c.basis === "net" ? r.value / c.ratio : r.value * c.ratio);
+      return {...r, val, est: !native};
+    })
+  }));
+}
+
+function renderLadder(mode){
+  const data = ladderValues(mode);
+  const max = Math.max(...data.flatMap(c => c.rows.map(r => r.val)));
+  const el = document.getElementById("ladder");
+  el.innerHTML = data.map(c => `
+    <div class="cgroup">
+      <h3>${FLAG(c.flag)} ${c.name} <span class="basis">${c.srcNote}</span></h3>
+      ${c.rows.map(r => {
+        const pct = Math.max(4, r.val / max * 100);
+        const inside = pct > 34;
+        const valTxt = (r.est ? "≈" : "") + fmt(r.val) + (r.plus && !r.est ? "+" : "");
+        const tip = `${c.name} · ${r.label}: ${valTxt} ${mode.toUpperCase()} — ${r.est ? "converted estimate (ratio " + c.ratio + ")" : "as reported (" + c.srcNote + ")"}${r.note ? ". " + r.note : ""}`;
+        return `
+        <div class="row">
+          <div class="rlabel">${r.label}</div>
+          <div class="bartrack">
+            <div class="bar ${mode} ${r.est ? "est" : ""}" data-w="${pct}%" data-tip="${tip.replace(/"/g,"&quot;")}">
+              <span class="val ${inside ? "" : "outside"}">${valTxt}</span>
+            </div>
+          </div>
+        </div>`;
+      }).join("")}
+    </div>
+  `).join("");
+  sweep(el);
+
+  const note = document.getElementById("flipnote");
+  if(mode === "net"){
+    note.className = "flipnote";
+    note.textContent = "NET view: Croatia's seniors (€2,573, reported) edge past Slovenia's all-level median (≈€2,370, converted).";
+  } else {
+    note.className = "flipnote gross";
+    note.textContent = "GROSS view: Slovenia (€3,750, reported) moves back ahead of Croatia's seniors (≈€3,539, converted). Same data.";
+  }
+}
+
+/* ============================================================
+   T.02 SALARY TRANSLATOR
+   ============================================================ */
+let calcBasis = "net";
+const selC = document.getElementById("calcCountry");
+selC.innerHTML = RATIOS.map(c => `<option value="${c.id}">${c.name}</option>`).join("");
+
+function renderCalc(){
+  const amtEl = document.getElementById("calcAmt");
+  let amt = parseFloat(amtEl.value);
+  const head = document.getElementById("calcHead");
+  const body = document.getElementById("calcBody");
+  if(!isFinite(amt) || amt <= 0){
+    head.textContent = "Enter an amount to translate.";
+    body.innerHTML = "";
+    return;
+  }
+  amt = Math.min(amt, 200000);
+  const src = RATIOS.find(c => c.id === selC.value);
+  const N = calcBasis === "net" ? amt : amt * src.r;
+  const G = calcBasis === "net" ? amt / src.r : amt;
+
+  head.innerHTML = calcBasis === "net"
+    ? `<b>${fmt(N)}</b> net in ${src.name} ≈ <b>${fmt(G)}</b> gross to the employer.`
+    : `<b>${fmt(G)}</b> gross in ${src.name} ≈ <b>${fmt(N)}</b> net in hand.`;
+
+  body.innerHTML = RATIOS.map(c => {
+    const needG = N / c.r;
+    const keepN = G * c.r;
+    const delta = (needG / G - 1) * 100;
+    const dTag = c.id === src.id
+      ? `<span class="d zero">your base</span>`
+      : `<span class="d ${delta >= 0.5 ? "up" : delta <= -0.5 ? "down" : "zero"}">${delta >= 0 ? "+" : ""}${delta.toFixed(0)}%</span>`;
+    return `<tr class="${c.id === src.id ? "srcrow" : ""}">
+      <td><span class="cname">${FLAG(c.id, true)} ${c.name}${c.est ? `<span class="esttag">est.</span>` : ""}</span></td>
+      <td class="num">${fmt(needG)} ${dTag}</td>
+      <td class="num">${fmt(keepN)}</td>
+    </tr>`;
+  }).join("");
+}
+
+document.getElementById("calcAmt").addEventListener("input", renderCalc);
+selC.addEventListener("change", renderCalc);
+const btnCN = document.getElementById("btnCNet");
+const btnCG = document.getElementById("btnCGross");
+function setCalcBasis(b){
+  calcBasis = b;
+  btnCN.setAttribute("aria-pressed", b === "net");
+  btnCG.setAttribute("aria-pressed", b === "gross");
+  renderCalc();
+}
+btnCN.addEventListener("click", () => setCalcBasis("net"));
+btnCG.addEventListener("click", () => setCalcBasis("gross"));
+
+/* ============================================================
+   T.03 PREMIUM
+   ============================================================ */
+function renderPremium(){
+  const withData = PREMIUM.filter(p => !p.gap);
+  const max = Math.max(...withData.map(p => p.it));
+  document.getElementById("prem").innerHTML = PREMIUM.map(p => {
+    if(p.gap){
+      return `<div class="prow gap">
+        <div class="pcountry">${FLAG(p.flag)} ${p.name}</div>
+        <div><span class="gaptag">no clean public multiple — ${p.gap}</span></div>
+        <div class="pmult" style="color:var(--rule)">—</div>
+      </div>`;
+    }
+    const natPct = Math.max(3, p.nat / max * 100);
+    const itPct = Math.max(3, p.it / max * 100);
+    return `<div class="prow">
+      <div class="pcountry">${FLAG(p.flag)} ${p.name}<small>${p.meta}</small></div>
+      <div class="pbars">
+        <div class="pbar nat" data-w="${natPct}%"><span>avg ${fmt(p.nat)}</span></div>
+        <div class="pbar it" data-w="${itPct}%"><span>IT ${fmt(p.it)}</span></div>
+      </div>
+      <div class="pmult">${p.mult}<small>IT / AVG</small></div>
+    </div>`;
+  }).join("");
+}
+
+/* ============================================================
+   T.04 MACRO
+   ============================================================ */
+function renderMacro(){
+  const max = Math.max(...EXPORTS.map(e => e.val));
+  document.getElementById("macro").innerHTML = EXPORTS.map(e => `
+    <div class="mrow">
+      <div class="mlabel">${FLAG(e.flag)} ${e.name}<small>${e.detail}</small></div>
+      <div><div class="mbar" data-w="${Math.max(1.5, e.val / max * 82)}%" data-tip="${e.tip.replace(/"/g,"&quot;")}"><span>${e.label}</span></div></div>
+    </div>
+  `).join("");
+  document.getElementById("emp").innerHTML =
+    `<span class="chip" style="border-style:dashed">Workforce:</span>` +
+    EMPLOY.map(x => `<span class="chip">${x.flags.map(f => FLAG(f, true)).join("")} <b>${x.t}</b></span>`).join("");
+}
+
+/* ============================================================
+   T.05 TRANSPARENCY
+   ============================================================ */
+function renderTransparency(){
+  document.getElementById("ttbody").innerHTML = TRANSPARENCY.map(t => `
+    <tr>
+      <td><span class="cname">${FLAG(t.flag, true)} ${t.name} <small>· ${t.tag}</small></span></td>
+      <td><span class="status ${t.s}">${t.st}</span></td>
+      <td style="color:var(--ink-soft)">${t.d}</td>
+    </tr>
+  `).join("");
+}
+
+/* ============================================================
+   TOOLTIP (pointer + touch)
+   ============================================================ */
+const tip = document.getElementById("tip");
+let tipTimer = null;
+function showTip(t, x, y){
+  tip.textContent = t;
+  tip.setAttribute("aria-hidden", "false");
+  tip.style.opacity = 1;
+  const pad = 12;
+  const w = tip.offsetWidth, h = tip.offsetHeight;
+  let px = Math.min(x + 14, window.innerWidth - w - pad);
+  let py = y + 18;
+  if (py + h > window.innerHeight - pad) py = y - h - 14;
+  tip.style.left = Math.max(pad, px) + "px";
+  tip.style.top = Math.max(pad, py) + "px";
+}
+function hideTip(){
+  tip.style.opacity = 0;
+  tip.setAttribute("aria-hidden", "true");
+}
+document.addEventListener("pointermove", e => {
+  const t = e.target.closest ? e.target.closest("[data-tip]") : null;
+  if (t && e.pointerType !== "touch") showTip(t.dataset.tip, e.clientX, e.clientY);
+  else if (e.pointerType !== "touch") hideTip();
+});
+document.addEventListener("pointerdown", e => {
+  const t = e.target.closest ? e.target.closest("[data-tip]") : null;
+  if (t && e.pointerType === "touch"){
+    showTip(t.dataset.tip, e.clientX, e.clientY);
+    clearTimeout(tipTimer);
+    tipTimer = setTimeout(hideTip, 3200);
+  } else if (e.pointerType === "touch") hideTip();
+});
+window.addEventListener("scroll", hideTip, {passive: true});
+
+/* ============================================================
+   MODE TOGGLE + BOOT
+   ============================================================ */
+const btnNet = document.getElementById("btnNet");
+const btnGross = document.getElementById("btnGross");
+function setMode(mode){
+  btnNet.setAttribute("aria-pressed", mode === "net");
+  btnGross.setAttribute("aria-pressed", mode === "gross");
+  renderLadder(mode);
+}
+btnNet.addEventListener("click", () => setMode("net"));
+btnGross.addEventListener("click", () => setMode("gross"));
+
+renderPremium();
+renderMacro();
+renderTransparency();
+setMode("net");
+renderCalc();
+
+/* sweep static charts when they scroll into view */
+const io = "IntersectionObserver" in window
+  ? new IntersectionObserver(entries => {
+      entries.forEach(en => { if (en.isIntersecting){ sweep(en.target); io.unobserve(en.target); } });
+    }, {threshold: 0.25})
+  : null;
+["t03","t04"].forEach(id => {
+  const s = document.getElementById(id);
+  if (io) io.observe(s); else sweep(s);
+});
+</script>
+</body>
+</html>
